@@ -1,31 +1,25 @@
 const mongoose = require('mongoose');
 
-const notificationSchema = new mongoose.Schema({
+const userTokenSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     required: true,
     ref: 'User',
   },
-  title: {
+  token: {
     type: String,
     required: true,
   },
-  body: {
+  platform: {
     type: String,
+    enum: ['web', 'android', 'ios'],
     required: true,
-  },
-  data: {
-    type: Object,
-    default: {},
-  },
-  read: {
-    type: Boolean,
-    default: false,
   },
   createdAt: {
     type: Date,
     default: Date.now,
+    expires: '365d', // Automatically delete after 1 year
   },
 });
 
-module.exports = mongoose.model('Notification', notificationSchema);
+module.exports = mongoose.model('UserToken', userTokenSchema);

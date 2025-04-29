@@ -1,11 +1,11 @@
-const { Queue, Worker } = require('bullmq');
+const { Queue } = require('bullmq');
 const IORedis = require('ioredis');
 
 const connection = new IORedis(process.env.REDIS_URL, {
   maxRetriesPerRequest: null,
 });
 
-const queueOptions = {
+const notificationQueue = new Queue('notification-queue', {
   connection,
   defaultJobOptions: {
     attempts: 3,
@@ -14,9 +14,6 @@ const queueOptions = {
       delay: 1000,
     },
   },
-};
+});
 
-module.exports = {
-  connection,
-  queueOptions,
-};
+module.exports = notificationQueue;

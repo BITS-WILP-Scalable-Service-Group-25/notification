@@ -1,45 +1,83 @@
 const { Worker } = require('bullmq');
 const { connection } = require('../config/queues');
+const { notificationQueue } = require('../queues/notification.queue');
 const NotificationService = require('../services/notification.service');
+const NotificationLog = require('../models/notification-log.model')
 const FCMService = require('../services/fcm.service');
 
 const worker = new Worker(
   'notification-high',
   async (job) => {
-    const { notificationId, userId, title, body, data } = job.data;
-    
+    const { notificationId, userId, title, body, data, role, quizId } = job.data;
+
     try {
-      // Send push notification
-      await FCMService.sendToUser(userId, title, body, data);
-      
-      // Log successful delivery
-      await NotificationService.logNotificationAttempt(
-        notificationId,
-        'push',
-        'delivered'
+      // Handle delete scenario (role === 3)
+      if (role == 3 && quizId) {
+        const jobs = await notificationQueue.getJobs(['waiting', 'delayed']);
+        for (const queuedJob of jobs) {
+          if (
+            queuedJob.data.quizId === quizId &&
+            queuedJob.id !== job.id
+          ) {
+            await queuedJob.remove();
+            console.log(`🗑️ Removed stale job ${queuedJob.id} for deleted quizId ${quizId}`);
+          }
+        }
+
+           await NotificationLog.findOneAndUpdate(
+        { notificationId, status:'deleted' }, // ensure correct entry
+        update,
+        { new: true }
       );
-      
+    
+
+        
+
+        return { status: 'deleted', message: 'Quiz was deleted, job removed from queue' };
+      }
+
+      // Determine action
+      let action = '';
+      if (role == 1) action = 'created';
+      else if (role == 2) action = 'updated';
+      else action = 'performed';
+
+      const finalTitle = title || `Quiz ${action}`;
+      const finalBody = body || `A quiz has been ${action}.`;
+
+      // Send notification
+      await FCMService.sendToUser(userId, finalTitle, finalBody, data || { quizId, role });
+
+      await NotificationLog.findOneAndUpdate(
+        { notificationId, status:'delivered' }, // ensure correct entry
+        update,
+        { new: true }
+      );
+    
+
       return { success: true };
     } catch (error) {
-      // Log failed attempt
-      await NotificationService.logNotificationAttempt(
-        notificationId,
-        'push',
-        'failed',
-        error
+      
+      await NotificationLog.findOneAndUpdate(
+        { notificationId, status:'failed' }, // ensure correct entry
+        update,
+        { new: true }
       );
+    
+     
       throw error;
     }
   },
   { connection }
 );
 
+// Listeners
 worker.on('completed', (job) => {
-  console.log(`Push notification sent for job ${job.id}`);
+  console.log(`✅ Notification completed for job ${job.id}`);
 });
 
 worker.on('failed', (job, err) => {
-  console.error(`Push notification failed for job ${job.id}:`, err);
+  console.error(`❌ Notification failed for job ${job.id}:`, err);
 });
 
 module.exports = worker;

@@ -1,22 +1,10 @@
-const { Queue, Worker } = require('bullmq');
-const IORedis = require('ioredis');
+const { Queue } = require('bullmq');
+const Redis = require('ioredis');
+require('dotenv').config();
 
-const connection = new IORedis(process.env.REDIS_URL, {
-  maxRetriesPerRequest: null,
-});
+const connection = new Redis(process.env.REDIS_URL);
 
-const queueOptions = {
-  connection,
-  defaultJobOptions: {
-    attempts: 3,
-    backoff: {
-      type: 'exponential',
-      delay: 1000,
-    },
-  },
-};
+const notificationQueue = new Queue('notification-high', { connection });
 
-module.exports = {
-  connection,
-  queueOptions,
-};
+module.exports = { notificationQueue };
+

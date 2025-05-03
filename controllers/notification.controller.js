@@ -1,43 +1,41 @@
-const NotificationService = require('../services/notification.service');
 
-const NotificationController = {
-  async sendNotification(req, res) {
-    try {
-      const notificationData = {
-        userId: req.body.userId,
-        title: req.body.title,
-        body: req.body.body,
-        data: req.body.data,
-        priority: req.body.priority || 'medium',
-        channels: req.body.channels || ['push'], // ['push', 'email', 'sms']
-      };
+const { addNotificationToQueue } = require('../services/notification.service');
+const Notification = require('../models/notification.model')
+const NotificationLog = require('../models/notification-log.model')
+const mongoose = require('mongoose')
 
-      const result = await NotificationService.createNotification(notificationData);
+const sendNotification = async (req, res) => {
+  try {
+    const { userId, message, role, quizId } = req.body;
+    const notificationId =  new mongoose.Types.ObjectId();
 
-      res.status(202).json({
-        message: 'Notification queued for delivery',
-        notificationId: result.notification._id,
-        queue: result.queueInfo.queue,
-      });
-    } catch (error) {
-      console.error('Error queuing notification:', error);
-      res.status(500).json({ error: 'Internal server error' });
-    }
-  },
+    // Step 2: Save to Notification collection
+    await Notification.create({
+      _id: notificationId,
+      userId,
+      message,
+      quizId,
+      status: 'pending',
+      createdAt: new Date().getTime().toString()
+    });
+  
+    // Step 3: Save to NotificationLog collection
+    await NotificationLog.create({
+      notificationId,
+      userId,
+      type: 'push',
+      status: 'pending',
+      role,
+      quizId
+    });
+  
+    // Add notification with role and quizId to the queue
+    await addNotificationToQueue(notificationId,userId, message, role, quizId);
 
-  async getNotificationStatus(req, res) {
-    try {
-      const notificationId = req.params.id;
-      const status = await NotificationService.getNotificationStatus(notificationId);
-
-      res.status(200).json(status);
-    } catch (error) {
-      console.error('Error fetching notification status:', error);
-      res.status(500).json({ error: 'Internal server error' });
-    }
-  },
-
-  // ... keep other methods from previous implementation
+    res.status(200).json({ success: true, message: "Notification added to queue" });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Error adding notification", error });
+  }
 };
 
-module.exports = NotificationController;
+module.exports = { sendNotification };

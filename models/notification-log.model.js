@@ -2,12 +2,12 @@ const mongoose = require('mongoose');
 
 const notificationLogSchema = new mongoose.Schema({
   notificationId: {
-    type: mongoose.Schema.Types.ObjectId,
+    type: String,
     ref: 'Notification',
     required: true,
   },
   userId: {
-    type: mongoose.Schema.Types.ObjectId,
+    type:String,
     required: true,
     ref: 'User',
   },
@@ -18,7 +18,6 @@ const notificationLogSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['pending', 'sent', 'delivered', 'failed'],
     default: 'pending',
   },
   attempts: {
@@ -28,6 +27,18 @@ const notificationLogSchema = new mongoose.Schema({
   lastAttemptAt: Date,
   error: String,
   deliveredAt: Date,
+
+  // ✅ Added at top level
+  role: {
+    type: Number,
+    enum: [1, 2, 3], // 1: create, 2: update, 3: delete (for clarity)
+    required: true,
+  },
+  quizId: {
+    type:String,
+    ref: 'Quiz', // assuming you have a Quiz model
+    required: true,
+  },
 }, { timestamps: true });
 
 module.exports = mongoose.model('NotificationLog', notificationLogSchema);

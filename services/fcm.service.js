@@ -13,9 +13,9 @@ const sendToUser = async (userId, title, body, data = {}) => {
     // 🔍 Step 1: Fetch user by ID
     const user = await User.findOne({userId:userId});
 
-    // if (!user || !user.fcmToken) {
-    //   throw new Error(`FCM token not found for user ${userId}`);
-    // }
+    if (!user || !user.fcmToken) {
+      throw new Error(`FCM token not found for user ${userId}`);
+    }
 
     // Convert all data values to strings
     const stringData = {};

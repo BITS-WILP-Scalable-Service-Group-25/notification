@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 require('dotenv').config(); // Ensure environment variables are loaded
 
 // MongoDB URI from environment variable or hardcoded
-const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/your-database-name';
+const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/notification';
 
 const connectDB = async () => {
   try {

@@ -11,19 +11,27 @@ const User = require("../models/userToken.model"); // Adjust path as needed
 const sendToUser = async (userId, title, body, data = {}) => {
   try {
     // 🔍 Step 1: Fetch user by ID
-    const user = await User.findOne(userId);
+    const user = await User.findOne({userId:userId});
 
-    if (!user || !user.fcmToken) {
-      throw new Error(`FCM token not found for user ${userId}`);
+    // if (!user || !user.fcmToken) {
+    //   throw new Error(`FCM token not found for user ${userId}`);
+    // }
+
+    // Convert all data values to strings
+    const stringData = {};
+    for (const key in data) {
+      stringData[key] = String(data[key]);
     }
 
+    console.log(data,'data')
+
     const message = {
-      token: user.token,
+      token: "fSIW07QfDe3Inmwxd_T5sh:APA91bEMZcZoqdiD0FyIP5dUdOouNuypXjODA3_s2vA82y9bXYPx5zN39jlo066XjCkrnKcjufUXKfYYJf2IuZYdTWckzaPh6ckJeGt138NPCmdIMxpVlRo",
       notification: {
         title,
         body,
       },
-      data,
+      data:stringData,
     };
 
     // 🚀 Step 2: Send notification

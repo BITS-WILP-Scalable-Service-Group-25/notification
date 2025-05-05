@@ -1,6 +1,6 @@
 const { Worker } = require('bullmq');
-const { connection } = require('../config/queues');
-const { notificationQueue } = require('../queues/notification.queue');
+const  connection  = require('../config/queue');
+const  notificationQueue  = require('../queues/push.queue');
 const NotificationService = require('../services/notification.service');
 const NotificationLog = require('../models/notification-log.model')
 const FCMService = require('../services/fcm.service');
@@ -8,6 +8,7 @@ const FCMService = require('../services/fcm.service');
 const worker = new Worker(
   'notification-high',
   async (job) => {
+
     const { notificationId, userId, title, body, data, role, quizId } = job.data;
 
     try {
@@ -49,8 +50,7 @@ const worker = new Worker(
       await FCMService.sendToUser(userId, finalTitle, finalBody, data || { quizId, role });
 
       await NotificationLog.findOneAndUpdate(
-        { notificationId, status:'delivered' }, // ensure correct entry
-        update,
+        { notificationId}, {status:'delivered' }, // ensure correct entry
         { new: true }
       );
     
@@ -59,8 +59,7 @@ const worker = new Worker(
     } catch (error) {
       
       await NotificationLog.findOneAndUpdate(
-        { notificationId, status:'failed' }, // ensure correct entry
-        update,
+        { notificationId}, {status:'failed' }, 
         { new: true }
       );
     

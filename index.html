@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>FCM Token Generator</title>
+</head>
+<body>
+  <h1>Get Firebase Cloud Messaging (FCM) Token</h1>
+  <p>Check the console for the FCM token.</p>
+
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDTKYy7hrTcJkYNLDlsownmuRfXxmxc8FE",
+      authDomain: "notification-2d825.firebaseapp.com",
+      projectId: "notification-2d825",
+      storageBucket: "notification-2d825.firebasestorage.app",
+      messagingSenderId: "902789459042",
+      appId: "1:902789459042:web:6275d6caaef3154113353b",
+      measurementId: "G-5RKN90KEKN"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const messaging = firebase.messaging();
+
+    // Register the service worker
+    navigator.serviceWorker.register('/firebase-messaging-sw.js')
+      .then((registration) => {
+        console.log('Service Worker registered');
+
+        messaging.getToken({
+          vapidKey: 'BKzxOoWMV4X3r5vX_3W1mMoOnGGWgOAaj9QebkFc8Pk2d7dLngC680umh0578_dG3Bv7sAFY_Pz5ru2ngoMopt0',
+          serviceWorkerRegistration: registration
+        }).then((token) => {
+          console.log("✅ FCM Token:", token);
+          alert("FCM Token:\n" + token);
+        }).catch((err) => {
+          console.error("Error getting token", err);
+        });
+
+      }).catch((err) => {
+        console.error('Service Worker registration failed', err);
+      });
+  </script>
+</body>
+</html>

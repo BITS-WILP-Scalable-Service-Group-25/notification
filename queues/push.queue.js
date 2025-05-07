@@ -1,9 +1,7 @@
 const { Queue } = require('bullmq');
-const IORedis = require('ioredis');
+const  connection  = require('../config/queue');
 
-const connection = new IORedis(process.env.REDIS_URL, {
-  maxRetriesPerRequest: null,
-});
+
 
 const notificationQueue = new Queue('notification-queue', {
   connection,

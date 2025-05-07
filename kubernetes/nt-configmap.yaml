@@ -3,4 +3,4 @@ kind: ConfigMap
 metadata:
   name: quiz-notification-config
 data:
-  redis: "10.111.198.113:6379"
+  redis: "redis://10.111.198.113:6379"

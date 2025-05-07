@@ -14,6 +14,10 @@ const worker = new Worker(
     try {
       // Handle delete scenario (role === 3)
       if (role == 3 && quizId) {
+        await NotificationLog.findOneAndUpdate(
+          { notificationId, status:'deleted' }, // ensure correct entry
+          update,
+          { new: true })
         const jobs = await notificationQueue.getJobs(['waiting', 'delayed']);
         for (const queuedJob of jobs) {
           if (
@@ -25,11 +29,8 @@ const worker = new Worker(
           }
         }
 
-           await NotificationLog.findOneAndUpdate(
-        { notificationId, status:'deleted' }, // ensure correct entry
-        update,
-        { new: true }
-      );
+          
+      
     
 
         
